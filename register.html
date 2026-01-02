@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Red Flag</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <span class="logo-icon">🚩</span>
+                    <span class="logo-text">Red Flag</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="auth-page">
+        <div class="container">
+            <div class="auth-card">
+                <a href="index.html" class="back-link">← Back to Home</a>
+
+                <!-- Step 1: Registration Form -->
+                <div id="step-register" class="auth-step active">
+                    <h1 class="auth-title">Create Account</h1>
+                    <p class="auth-description">
+                        Register to report scams and access advanced search features
+                    </p>
+
+                    <form id="registerForm" class="auth-form">
+                        <div class="form-group">
+                            <label for="name" class="form-label">Full Name</label>
+                            <input 
+                                type="text" 
+                                id="name" 
+                                name="name" 
+                                class="form-input" 
+                                placeholder="John Doe"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                class="form-input" 
+                                placeholder="john@example.com"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input 
+                                type="tel" 
+                                id="phone" 
+                                name="phone" 
+                                class="form-input" 
+                                placeholder="+1234567890"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password" class="form-label">Password</label>
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                class="form-input" 
+                                placeholder="Min. 8 characters"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <input 
+                                type="password" 
+                                id="confirmPassword" 
+                                name="confirmPassword" 
+                                class="form-input" 
+                                placeholder="Confirm your password"
+                                required
+                            >
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-full">
+                            Create Account
+                        </button>
+
+                        <p class="auth-footer">
+                            Already have an account? 
+                            <a href="login.html" class="auth-link">Sign in</a>
+                        </p>
+                    </form>
+                </div>
+
+                <!-- Step 2: Email Verification -->
+                <div id="step-email-verify" class="auth-step hidden">
+                    <h1 class="auth-title">Verify Email</h1>
+                    <p class="auth-description" id="emailVerifyText">
+                        We sent a verification code to your email
+                    </p>
+
+                    <form id="emailVerifyForm" class="auth-form">
+                        <div class="form-group">
+                            <label for="emailCode" class="form-label">Verification Code</label>
+                            <input 
+                                type="text" 
+                                id="emailCode" 
+                                name="emailCode" 
+                                class="form-input" 
+                                placeholder="Enter 6-digit code"
+                                maxlength="6"
+                                required
+                            >
+                            <p class="form-help">
+                                Check your inbox for the verification code
+                            </p>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-full">
+                            Verify Email
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Step 3: Phone Verification -->
+                <div id="step-phone-verify" class="auth-step hidden">
+                    <h1 class="auth-title">Verify Phone</h1>
+                    <p class="auth-description" id="phoneVerifyText">
+                        We sent an OTP code to your phone
+                    </p>
+
+                    <form id="phoneVerifyForm" class="auth-form">
+                        <div class="form-group">
+                            <label for="phoneCode" class="form-label">OTP Code</label>
+                            <input 
+                                type="text" 
+                                id="phoneCode" 
+                                name="phoneCode" 
+                                class="form-input" 
+                                placeholder="Enter 6-digit OTP"
+                                maxlength="6"
+                                required
+                            >
+                            <p class="form-help">
+                                Enter the OTP sent to your phone
+                            </p>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-full">
+                            Verify Phone
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Step 4: Success -->
+                <div id="step-success" class="auth-step hidden">
+                    <div class="success-content">
+                        <div class="success-icon">✅</div>
+                        <h1 class="auth-title">Account Created!</h1>
+                        <p class="auth-description">
+                            Your account has been created and verified successfully.
+                        </p>
+                        <a href="login.html" class="btn btn-primary btn-full">
+                            Go to Login
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-copyright">
+                © <span id="currentYear"></span> Red Flag. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

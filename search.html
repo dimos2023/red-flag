@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search - Red Flag</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <span class="logo-icon">🚩</span>
+                    <span class="logo-text">Red Flag</span>
+                </a>
+                <nav class="nav">
+                    <a href="report.html" class="nav-link">Report Scam</a>
+                    <a href="login.html" class="nav-link">Login</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="search-page">
+        <div class="container">
+            <a href="index.html" class="back-link">← Back to Home</a>
+
+            <div class="search-header">
+                <h1 class="page-title">Search for Scam Reports</h1>
+                <p class="page-description">
+                    Enter a phone number, name, or other details to check for scam reports
+                </p>
+            </div>
+
+            <div class="search-card">
+                <div class="search-card-header">
+                    <h2 class="search-card-title">🔍 Search Options</h2>
+                    <p class="search-card-description">
+                        Choose how you want to search and enter relevant information
+                    </p>
+                </div>
+
+                <form id="searchForm" class="search-form">
+                    <div class="form-group">
+                        <label for="searchType" class="form-label">Search By</label>
+                        <select id="searchType" name="searchType" class="form-select">
+                            <option value="phone">📱 Phone Number</option>
+                            <option value="name">👤 Name</option>
+                            <option value="nationalId">🪪 National ID</option>
+                            <option value="address">📍 Address</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="searchValue" class="form-label" id="searchValueLabel">Phone Number</label>
+                        <input 
+                            type="text" 
+                            id="searchValue" 
+                            name="searchValue" 
+                            class="form-input" 
+                            placeholder="+1234567890"
+                            required
+                        >
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full btn-lg">
+                        Search
+                    </button>
+
+                    <div class="form-notice">
+                        <strong>Privacy Notice:</strong> Search results show only approved scam reports. 
+                        A "Green Flag" means no negative data has been found but does not guarantee 
+                        person or entity is completely trustworthy.
+                    </div>
+                </form>
+            </div>
+
+            <!-- Search Tips -->
+            <div class="search-tips">
+                <h2 class="section-title">Search Tips</h2>
+                <div class="tips-grid">
+                    <div class="tip-card">
+                        <div class="tip-icon">📱</div>
+                        <h3 class="tip-title">Search by Phone</h3>
+                        <p class="tip-description">
+                            Phone numbers are the most reliable way to search. Enter the full number with 
+                            country code for best results.
+                        </p>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-icon">👤</div>
+                        <h3 class="tip-title">Search by Name</h3>
+                        <p class="tip-description">
+                            Names can be common. Use additional identifiers like phone number or address 
+                            for more accurate results.
+                        </p>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-icon">🪪</div>
+                        <h3 class="tip-title">Search by National ID</h3>
+                        <p class="tip-description">
+                            National ID or passport numbers provide unique identification but should be 
+                            used with caution.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-copyright">
+                © <span id="currentYear"></span> Red Flag. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

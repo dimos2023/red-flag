@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report a Scam - Red Flag</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <span class="logo-icon">🚩</span>
+                    <span class="logo-text">Red Flag</span>
+                </a>
+                <nav class="nav">
+                    <a href="search.html" class="nav-link">Search</a>
+                    <a href="login.html" class="nav-link">Login</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="report-page">
+        <div class="container">
+            <a href="index.html" class="back-link">← Back to Home</a>
+
+            <div class="report-header">
+                <h1 class="page-title">Report a Scam</h1>
+                <p class="page-description">
+                    Help protect others by reporting fraudulent activities. All reports are reviewed before being published.
+                </p>
+            </div>
+
+            <div class="report-card">
+                <div class="report-card-header">
+                    <h2 class="report-card-title">🚨 Scammer Information</h2>
+                    <p class="report-card-description">
+                        Provide as much detail as possible about scammer
+                    </p>
+                </div>
+
+                <form id="reportForm" class="report-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="scammerPhone" class="form-label">
+                                Scammer Phone Number <span class="required">*</span>
+                            </label>
+                            <input 
+                                type="tel" 
+                                id="scammerPhone" 
+                                name="scammerPhone" 
+                                class="form-input" 
+                                placeholder="+1234567890"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="scammerName" class="form-label">Scammer Name (if known)</label>
+                            <input 
+                                type="text" 
+                                id="scammerName" 
+                                name="scammerName" 
+                                class="form-input" 
+                                placeholder="John Doe"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="scammerAddress" class="form-label">Address (if known)</label>
+                            <input 
+                                type="text" 
+                                id="scammerAddress" 
+                                name="scammerAddress" 
+                                class="form-input" 
+                                placeholder="City, State, Country"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="scammerNationalId" class="form-label">National ID Number (if known)</label>
+                            <input 
+                                type="text" 
+                                id="scammerNationalId" 
+                                name="scammerNationalId" 
+                                class="form-input" 
+                                placeholder="National ID or passport"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Photo Uploads -->
+                    <div class="photo-section">
+                        <h3 class="photo-section-title">Photo Uploads (Optional)</h3>
+
+                        <div class="photo-upload-group">
+                            <div class="form-group">
+                                <label for="profilePhoto" class="form-label">Profile Photo</label>
+                                <div class="file-upload">
+                                    <input 
+                                        type="file" 
+                                        id="profilePhoto" 
+                                        name="profilePhoto" 
+                                        accept="image/*"
+                                        class="file-input"
+                                    >
+                                    <div class="file-preview" id="profilePreview">
+                                        <span class="file-preview-icon">📷</span>
+                                    </div>
+                                    <div class="file-info">
+                                        <p class="file-info-text">Upload a photo of scammer (max 5MB)</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="nationalIdPhoto" class="form-label">National ID Photo</label>
+                                <div class="file-upload">
+                                    <input 
+                                        type="file" 
+                                        id="nationalIdPhoto" 
+                                        name="nationalIdPhoto" 
+                                        accept="image/*"
+                                        class="file-input"
+                                    >
+                                    <div class="file-preview" id="nationalIdPreview">
+                                        <span class="file-preview-icon">📷</span>
+                                    </div>
+                                    <div class="file-info">
+                                        <p class="file-info-text">Upload national ID or passport photo (max 5MB)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description" class="form-label">
+                            Describe the Scam <span class="required">*</span>
+                        </label>
+                        <textarea 
+                            id="description" 
+                            name="description" 
+                            class="form-textarea" 
+                            placeholder="Please describe how the scam happened, what was promised, how much money was involved, and any other relevant details..."
+                            rows="6"
+                            required
+                        ></textarea>
+                        <p class="form-help">
+                            Be as detailed as possible to help others recognize similar scams
+                        </p>
+                    </div>
+
+                    <div class="form-warning">
+                        <strong>Important:</strong> By submitting this report, you confirm that information 
+                        provided is accurate to the best of your knowledge. False reports may lead to account suspension.
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full btn-lg">
+                        Submit Report
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-copyright">
+                © <span id="currentYear"></span> Red Flag. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

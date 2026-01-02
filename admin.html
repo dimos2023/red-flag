@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Red Flag</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <span class="logo-icon">🚩</span>
+                    <span class="logo-text">Red Flag</span>
+                </a>
+                <div class="header-actions">
+                    <span class="admin-badge">Admin Dashboard</span>
+                    <button id="logoutBtn" class="btn btn-secondary btn-sm">Logout</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-page">
+        <div class="container">
+            <a href="index.html" class="back-link">← Back to Home</a>
+
+            <div class="admin-header">
+                <h1 class="page-title">Admin Dashboard</h1>
+                <p class="page-description">Review and manage scam reports</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Reports</div>
+                    <div class="stat-value" id="totalReports">0</div>
+                </div>
+                <div class="stat-card stat-card-yellow">
+                    <div class="stat-label">Pending</div>
+                    <div class="stat-value" id="pendingReports">0</div>
+                </div>
+                <div class="stat-card stat-card-green">
+                    <div class="stat-label">Approved</div>
+                    <div class="stat-value" id="approvedReports">0</div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="admin-filters">
+                <button class="filter-btn active" data-filter="ALL">All Reports</button>
+                <button class="filter-btn" data-filter="PENDING">Pending</button>
+                <button class="filter-btn" data-filter="APPROVED">Approved</button>
+                <button class="filter-btn" data-filter="REJECTED">Rejected</button>
+                <button id="refreshBtn" class="btn btn-secondary btn-sm">Refresh</button>
+            </div>
+
+            <!-- Reports List -->
+            <div class="reports-container">
+                <div id="adminLoadingState" class="loading-state hidden">
+                    <div class="spinner"></div>
+                    <p>Loading reports...</p>
+                </div>
+
+                <div id="adminReportsContainer">
+                    <!-- Reports will be loaded here -->
+                </div>
+
+                <div id="noReports" class="no-reports hidden">
+                    <p>No reports found</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Review Modal -->
+    <div id="reviewModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Review Report</h2>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="reportDetails"></div>
+                <div class="form-group">
+                    <label for="adminNotes" class="form-label">Admin Notes (optional)</label>
+                    <textarea 
+                        id="adminNotes" 
+                        name="adminNotes" 
+                        class="form-textarea" 
+                        placeholder="Add notes for your decision..."
+                        rows="3"
+                    ></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelReview" class="btn btn-secondary">Cancel</button>
+                <button id="rejectReport" class="btn btn-danger">Reject Report</button>
+                <button id="approveReport" class="btn btn-success">Approve Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-copyright">
+                © <span id="currentYear"></span> Red Flag. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results - Red Flag</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <span class="logo-icon">🚩</span>
+                    <span class="logo-text">Red Flag</span>
+                </a>
+                <nav class="nav">
+                    <a href="search.html" class="nav-link">Search</a>
+                    <a href="report.html" class="nav-link">Report Scam</a>
+                    <a href="login.html" class="nav-link">Login</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="results-page">
+        <div class="container">
+            <a href="search.html" class="back-link">← Back to Search</a>
+
+            <div id="resultsContent">
+                <!-- Loading State -->
+                <div id="loadingState" class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Searching...</p>
+                </div>
+
+                <!-- Results Container -->
+                <div id="resultsContainer" class="hidden">
+                    <!-- Search Info -->
+                    <div class="search-info-card">
+                        <p>Search results for <strong id="searchTypeLabel">Phone Number</strong>: 
+                        <strong id="searchValue"></strong></p>
+                    </div>
+
+                    <!-- Red Flag - Scam Found -->
+                    <div id="redFlagCard" class="flag-card red-flag hidden">
+                        <div class="flag-content">
+                            <div class="flag-icon red">
+                                <span>🚨</span>
+                            </div>
+                            <h1 class="flag-title">RED FLAG</h1>
+                            <p class="flag-subtitle">Scam Reports Found</p>
+                            
+                            <div class="flag-warning">
+                                <span class="warning-icon">⚠️</span>
+                                <div>
+                                    <p class="warning-title">Warning: Do NOT deal with this person or entity</p>
+                                    <p class="warning-text">
+                                        <span id="reportCount">0</span> scam report(s) found in our database. 
+                                        Based on user reports, this person or entity has been involved in 
+                                        fraudulent activities.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <a href="report.html" class="btn btn-primary btn-lg">
+                                Report Additional Details
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Green Flag - No Scams Found -->
+                    <div id="greenFlagCard" class="flag-card green-flag hidden">
+                        <div class="flag-content">
+                            <div class="flag-icon green">
+                                <span>✅</span>
+                            </div>
+                            <h1 class="flag-title">GREEN FLAG</h1>
+                            <p class="flag-subtitle">No Scam Reports Found</p>
+                            
+                            <div class="flag-success">
+                                <span class="success-icon">✅</span>
+                                <div>
+                                    <p class="success-title">No negative data found in our database</p>
+                                    <p class="success-text">
+                                        We couldn't find any approved scam reports for this 
+                                        <span id="flagTypeLabel">phone number</span>. However, this does NOT 
+                                        guarantee complete trustworthiness.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flag-disclaimers">
+                                <h3>Important Disclaimers:</h3>
+                                <ul>
+                                    <li>This platform relies on user-submitted reports</li>
+                                    <li>Absence of reports does not mean person is legitimate</li>
+                                    <li>Always conduct your own due diligence</li>
+                                    <li>Be cautious and trust your instincts</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Reports -->
+                    <div id="reportsList" class="reports-list hidden">
+                        <h2 class="reports-list-title">Reported Scam Details</h2>
+                        <div id="reportsContainer"></div>
+                    </div>
+
+                    <!-- Footer Disclaimer -->
+                    <div class="disclaimer-card-small">
+                        <span class="disclaimer-icon">⚠️</span>
+                        <div>
+                            <p class="disclaimer-title-small">Important Disclaimer</p>
+                            <p class="disclaimer-text-small">
+                                This platform is a warning and information service and is not a legal or 
+                                judicial authority. All reports are user-submitted and reviewed by our team. 
+                                Always conduct your own research and due diligence before engaging in any 
+                                transactions.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-copyright">
+                © <span id="currentYear"></span> Red Flag. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
