@@ -1483,3 +1483,48 @@ main {
         font-size: var(--font-size-3xl);
     }
 }
+
+/* Hero Background Image - Trust & Safety */
+.hero-bg {
+    position: relative;
+    background-image: url("images/handshake.jpg"); /* مسار الصورة */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Dark overlay for readability */
+.hero-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        rgba(0, 0, 0, 0.65),
+        rgba(0, 0, 0, 0.75)
+    );
+    z-index: 1;
+}
+
+/* Ensure content is above overlay */
+.hero-bg .container {
+    position: relative;
+    z-index: 2;
+}
+
+/* Improve text visibility */
+.hero-title,
+.hero-description,
+.hero-note {
+    color: #ffffff;
+}
+
+/* Buttons enhancement on background */
+.hero-buttons .btn-primary {
+    box-shadow: 0 10px 30px rgba(220, 38, 38, 0.4);
+}
+
+.hero-buttons .btn-secondary {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
