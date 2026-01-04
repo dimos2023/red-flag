@@ -1001,6 +1001,9 @@ function createAdminReportCard(report, reporter) {
                 Reject
             </button>
             ` : ''}
+            <button class="btn btn-danger btn-sm" onclick="deleteReport('${report.id}')">
+                Delete
+            </button>
         </div>
     `;
     
@@ -1059,6 +1062,16 @@ function handleReportAction(action) {
     modal.classList.add('hidden');
 
     showToast(action === 'APPROVED' ? 'Report approved successfully' : 'Report rejected', 'success');
+    loadReports();
+}
+
+function deleteReport(reportId) {
+    const confirmDelete = window.confirm('Are you sure you want to delete this report?');
+    if (!confirmDelete) return;
+
+    demoReports = demoReports.filter(r => r.id !== reportId);
+    saveReports();
+    showToast('Report deleted', 'success');
     loadReports();
 }
 
