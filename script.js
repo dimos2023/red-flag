@@ -6,6 +6,7 @@ let currentFilter = 'ALL';
 let selectedReportId = null;
 const adminEmails = ['admin@test.com', 'admin@regflag.com', 'AhmedAshry.hh@gmail.com'];
 const REPORTS_STORAGE_KEY = 'reportsData';
+const DELETED_REPORTS_STORAGE_KEY = 'deletedReportsData';
 
 // ===== Demo Data =====
 const demoUsers = [
@@ -69,6 +70,7 @@ let demoReports = [
         createdAt: new Date('2025-01-05').toISOString()
     }
 ];
+let deletedReports = [];
 
 // ===== Auth Helpers (Firebase + local persistence) =====
 function isAdminEmail(email = '') {
@@ -136,6 +138,28 @@ function saveReports() {
         localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(demoReports));
     } catch (e) {
         console.warn('Failed to save reports', e);
+    }
+}
+
+function loadStoredDeletedReports() {
+    try {
+        const stored = localStorage.getItem(DELETED_REPORTS_STORAGE_KEY);
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+                deletedReports = parsed;
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to load deleted reports', e);
+    }
+}
+
+function saveDeletedReports() {
+    try {
+        localStorage.setItem(DELETED_REPORTS_STORAGE_KEY, JSON.stringify(deletedReports));
+    } catch (e) {
+        console.warn('Failed to save deleted reports', e);
     }
 }
 
@@ -232,6 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load persisted reports
     loadStoredReports();
+    loadStoredDeletedReports();
 
     // Check for logged in user
     checkAuth();
@@ -969,6 +994,39 @@ function loadReports() {
             });
         }
     }, 300);
+
+    // Render deleted reports section
+    renderDeletedReports();
+}
+
+function renderDeletedReports() {
+    const container = document.getElementById('deletedReportsContainer');
+    const noDeleted = document.getElementById('noDeletedReports');
+    if (!container) return;
+
+    if (deletedReports.length === 0) {
+        container.innerHTML = '';
+        if (noDeleted) noDeleted.classList.remove('hidden');
+        return;
+    }
+
+    if (noDeleted) noDeleted.classList.add('hidden');
+
+    container.innerHTML = deletedReports.map(report => `
+        <div class="admin-report-card" style="background-color: var(--color-gray-50);">
+            <div class="admin-report-header">
+                <div>
+                    <h3 class="report-detail-title">${report.scammerName || 'Unknown'}</h3>
+                    <p class="report-detail-meta">Phone: ${report.scammerPhone}</p>
+                    <p class="report-detail-meta">Deleted: ${new Date(report.deletedAt).toLocaleString()}</p>
+                </div>
+                <span class="admin-report-status status-rejected">DELETED</span>
+            </div>
+            <p style="margin-bottom: 1rem; font-size: 0.875rem; color: #6b7280;">
+                ${report.description.substring(0, 120)}${report.description.length > 120 ? '...' : ''}
+            </p>
+        </div>
+    `).join('');
 }
 
 function createAdminReportCard(report, reporter) {
@@ -1069,10 +1127,18 @@ function deleteReport(reportId) {
     const confirmDelete = window.confirm('Are you sure you want to delete this report?');
     if (!confirmDelete) return;
 
+    const report = demoReports.find(r => r.id === reportId);
+    if (!report) return;
+
+    // Move to deleted bucket
+    deletedReports.push({ ...report, deletedAt: new Date().toISOString() });
+    saveDeletedReports();
+
     demoReports = demoReports.filter(r => r.id !== reportId);
     saveReports();
     showToast('Report deleted', 'success');
     loadReports();
+    renderDeletedReports();
 }
 
 // ===== Auth Helpers =====
