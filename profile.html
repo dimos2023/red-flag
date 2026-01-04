@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - Red Flag</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <span class="logo-icon">dYsc</span>
+                    <span class="logo-text">Red Flag</span>
+                </a>
+                <nav class="nav">
+                    <a href="search.html" class="nav-link">Search</a>
+                    <a href="report.html" class="nav-link">Report Scam</a>
+                    <a href="login.html" class="nav-link">Login</a>
+                    <a href="register.html" class="btn btn-primary">Register</a>
+                </nav>
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="auth-page">
+        <div class="container">
+            <div class="auth-card" style="max-width: 720px;">
+                <a href="index.html" class="back-link">ƒ+? Back to Home</a>
+                <h1 class="auth-title">Your Profile</h1>
+                <p class="auth-description">
+                    View and update your account information.
+                </p>
+
+                <form id="profileForm" class="auth-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="profileName" class="form-label">Full Name</label>
+                            <input 
+                                type="text" 
+                                id="profileName" 
+                                name="profileName" 
+                                class="form-input" 
+                                placeholder="Your name"
+                                required
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="profilePhone" class="form-label">Phone Number</label>
+                            <input 
+                                type="tel" 
+                                id="profilePhone" 
+                                name="profilePhone" 
+                                class="form-input" 
+                                placeholder="+1234567890"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profileEmail" class="form-label">Email Address</label>
+                        <input 
+                            type="email" 
+                            id="profileEmail" 
+                            name="profileEmail" 
+                            class="form-input" 
+                            disabled
+                        >
+                        <p class="form-help">Email changes require admin support.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Profile Photo</label>
+                        <div class="photo-upload-group" style="grid-template-columns: 1fr;">
+                            <div class="file-upload">
+                                <input 
+                                    type="file" 
+                                    id="profilePhotoInput" 
+                                    name="profilePhotoInput" 
+                                    accept="image/*"
+                                    class="file-input"
+                                >
+                                <div class="file-preview" id="profilePhotoPreview">
+                                    <span class="file-preview-icon">dY"ú</span>
+                                </div>
+                                <div class="file-info">
+                                    <p class="file-info-text">Upload a profile photo (optional)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-copyright">
+                Ac <span id="currentYear"></span> Red Flag. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="firebase-init.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

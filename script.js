@@ -119,11 +119,13 @@ function setCurrentUser(profile) {
     currentUser = profile;
     localStorage.setItem('currentUser', JSON.stringify(profile));
     ensureDemoUser(profile);
+    updateNavAuthUI();
 }
 
 function clearCurrentUser() {
     currentUser = null;
     localStorage.removeItem('currentUser');
+    updateNavAuthUI();
 }
 
 function updateNavAuthUI() {
@@ -131,24 +133,36 @@ function updateNavAuthUI() {
     navs.forEach(nav => {
         const loginLink = nav.querySelector('a[href="login.html"]');
         const registerLink = nav.querySelector('a[href="register.html"]');
+        let profileLink = nav.querySelector('a[href="profile.html"]');
         let userPill = nav.querySelector('.user-pill');
 
         if (currentUser) {
             if (loginLink) loginLink.classList.add('hidden');
             if (registerLink) registerLink.classList.add('hidden');
 
+            if (!profileLink) {
+                profileLink = document.createElement('a');
+                profileLink.href = 'profile.html';
+                profileLink.className = 'nav-link';
+                profileLink.textContent = 'Profile';
+                nav.insertBefore(profileLink, nav.firstChild);
+            }
+
             if (!userPill) {
-                userPill = document.createElement('span');
+                userPill = document.createElement('button');
                 userPill.className = 'user-pill';
+                userPill.type = 'button';
                 nav.appendChild(userPill);
             }
 
             const displayName = currentUser.name || currentUser.email || 'User';
             userPill.textContent = displayName;
             userPill.classList.remove('hidden');
+            userPill.onclick = handleLogout; // logout on click
         } else {
             if (loginLink) loginLink.classList.remove('hidden');
             if (registerLink) registerLink.classList.remove('hidden');
+            if (profileLink) profileLink.remove();
             if (userPill) {
                 userPill.remove();
             }
@@ -197,6 +211,9 @@ function initPage() {
             break;
         case 'admin.html':
             initAdminPage();
+            break;
+        case 'profile.html':
+            initProfilePage();
             break;
     }
 }
@@ -455,6 +472,68 @@ function initReportPage() {
     if (nationalIdPhotoInput) {
         nationalIdPhotoInput.addEventListener('change', function(e) {
             handleFilePreview(e, 'nationalIdPreview');
+        });
+    }
+}
+
+// ===== Profile Page =====
+function initProfilePage() {
+    const profileForm = document.getElementById('profileForm');
+    const profilePhotoInput = document.getElementById('profilePhotoInput');
+    const profilePhotoPreview = document.getElementById('profilePhotoPreview');
+
+    if (!currentUser) {
+        showToast('Please login to view your profile', 'error');
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 1200);
+        return;
+    }
+
+    const storedProfile = getStoredUserProfile(currentUser.id) || currentUser;
+
+    // Populate fields
+    const nameInput = document.getElementById('profileName');
+    const phoneInput = document.getElementById('profilePhone');
+    const emailInput = document.getElementById('profileEmail');
+
+    if (nameInput) nameInput.value = storedProfile.name || '';
+    if (phoneInput) phoneInput.value = storedProfile.phone || '';
+    if (emailInput) emailInput.value = storedProfile.email || '';
+
+    if (storedProfile.photoUrl && profilePhotoPreview) {
+        profilePhotoPreview.innerHTML = `<img src="${storedProfile.photoUrl}" alt="Profile Photo">`;
+    }
+
+    if (profilePhotoInput) {
+        profilePhotoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && profilePhotoPreview) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    profilePhotoPreview.innerHTML = `<img src="${ev.target.result}" alt="Profile Photo">`;
+                    storedProfile.photoUrl = ev.target.result;
+                    saveUserProfile({ ...storedProfile, photoUrl: ev.target.result });
+                    setCurrentUser({ ...storedProfile, photoUrl: ev.target.result });
+                    updateNavAuthUI();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    if (profileForm) {
+        profileForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const updated = {
+                ...storedProfile,
+                name: nameInput ? nameInput.value : storedProfile.name,
+                phone: phoneInput ? phoneInput.value : storedProfile.phone
+            };
+            saveUserProfile(updated);
+            setCurrentUser(updated);
+            updateNavAuthUI();
+            showToast('Profile updated successfully', 'success');
         });
     }
 }
