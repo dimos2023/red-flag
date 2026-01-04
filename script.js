@@ -126,6 +126,36 @@ function clearCurrentUser() {
     localStorage.removeItem('currentUser');
 }
 
+function updateNavAuthUI() {
+    const navs = document.querySelectorAll('.nav');
+    navs.forEach(nav => {
+        const loginLink = nav.querySelector('a[href="login.html"]');
+        const registerLink = nav.querySelector('a[href="register.html"]');
+        let userPill = nav.querySelector('.user-pill');
+
+        if (currentUser) {
+            if (loginLink) loginLink.classList.add('hidden');
+            if (registerLink) registerLink.classList.add('hidden');
+
+            if (!userPill) {
+                userPill = document.createElement('span');
+                userPill.className = 'user-pill';
+                nav.appendChild(userPill);
+            }
+
+            const displayName = currentUser.name || currentUser.email || 'User';
+            userPill.textContent = displayName;
+            userPill.classList.remove('hidden');
+        } else {
+            if (loginLink) loginLink.classList.remove('hidden');
+            if (registerLink) registerLink.classList.remove('hidden');
+            if (userPill) {
+                userPill.remove();
+            }
+        }
+    });
+}
+
 // ===== Initialize =====
 document.addEventListener('DOMContentLoaded', function() {
     // Set current year
@@ -325,6 +355,7 @@ async function handleLogin(e) {
         setCurrentUser(profile);
 
         showToast('Login successful!', 'success');
+        updateNavAuthUI();
 
         // Redirect based on role
         if (profile.role === 'ADMIN') {
@@ -671,6 +702,7 @@ function initAdminPage() {
             profile.role = isAdminEmail(user.email) ? 'ADMIN' : (profile.role || 'USER');
             saveUserProfile(profile);
             setCurrentUser(profile);
+            updateNavAuthUI();
         }
     }
 
@@ -873,6 +905,7 @@ function checkAuth() {
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
         ensureDemoUser(currentUser);
+        updateNavAuthUI();
     }
 
     if (window.firebaseAuth) {
@@ -885,8 +918,10 @@ function checkAuth() {
                 profile.role = isAdminEmail(user.email) ? 'ADMIN' : (profile.role || 'USER');
                 saveUserProfile(profile);
                 setCurrentUser(profile);
+                updateNavAuthUI();
             } else if (!user) {
                 clearCurrentUser();
+                updateNavAuthUI();
             }
         });
     }
