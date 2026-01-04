@@ -5,6 +5,7 @@ let currentUser = null;
 let currentFilter = 'ALL';
 let selectedReportId = null;
 const adminEmails = ['admin@test.com', 'admin@regflag.com', 'AhmedAshry.hh@gmail.com'];
+const REPORTS_STORAGE_KEY = 'reportsData';
 
 // ===== Demo Data =====
 const demoUsers = [
@@ -115,6 +116,29 @@ function ensureDemoUser(profile) {
     }
 }
 
+// ===== Reports Persistence =====
+function loadStoredReports() {
+    try {
+        const stored = localStorage.getItem(REPORTS_STORAGE_KEY);
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+                demoReports = parsed;
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to load stored reports', e);
+    }
+}
+
+function saveReports() {
+    try {
+        localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(demoReports));
+    } catch (e) {
+        console.warn('Failed to save reports', e);
+    }
+}
+
 function setCurrentUser(profile) {
     currentUser = profile;
     localStorage.setItem('currentUser', JSON.stringify(profile));
@@ -133,12 +157,27 @@ function updateNavAuthUI() {
     navs.forEach(nav => {
         const loginLink = nav.querySelector('a[href="login.html"]');
         const registerLink = nav.querySelector('a[href="register.html"]');
+        let adminLink = nav.querySelector('a.admin-link');
         let profileLink = nav.querySelector('a[href="profile.html"]');
         let userPill = nav.querySelector('.user-pill');
+        let logoutBtn = nav.querySelector('.logout-btn');
 
         if (currentUser) {
             if (loginLink) loginLink.classList.add('hidden');
             if (registerLink) registerLink.classList.add('hidden');
+            // Admin link
+            if (currentUser.role === 'ADMIN') {
+                if (!adminLink) {
+                    adminLink = document.createElement('a');
+                    adminLink.href = 'admin.html';
+                    adminLink.className = 'nav-link admin-link';
+                    adminLink.textContent = 'Admin Dashboard';
+                    nav.insertBefore(adminLink, nav.firstChild);
+                }
+                adminLink.classList.remove('hidden');
+            } else if (adminLink) {
+                adminLink.remove();
+            }
 
             if (!profileLink) {
                 profileLink = document.createElement('a');
@@ -158,13 +197,26 @@ function updateNavAuthUI() {
             const displayName = currentUser.name || currentUser.email || 'User';
             userPill.textContent = displayName;
             userPill.classList.remove('hidden');
-            userPill.onclick = handleLogout; // logout on click
+
+            if (!logoutBtn) {
+                logoutBtn = document.createElement('button');
+                logoutBtn.type = 'button';
+                logoutBtn.className = 'logout-btn';
+                logoutBtn.textContent = 'Logout';
+                nav.appendChild(logoutBtn);
+            }
+            logoutBtn.classList.remove('hidden');
+            logoutBtn.onclick = handleLogout;
         } else {
             if (loginLink) loginLink.classList.remove('hidden');
             if (registerLink) registerLink.classList.remove('hidden');
+            if (adminLink) adminLink.remove();
             if (profileLink) profileLink.remove();
             if (userPill) {
                 userPill.remove();
+            }
+            if (logoutBtn) {
+                logoutBtn.remove();
             }
         }
     });
@@ -177,6 +229,9 @@ document.addEventListener('DOMContentLoaded', function() {
     yearElements.forEach(el => {
         el.textContent = new Date().getFullYear();
     });
+
+    // Load persisted reports
+    loadStoredReports();
 
     // Check for logged in user
     checkAuth();
@@ -228,6 +283,18 @@ function initHomePage() {
         mobileMenuBtn.addEventListener('click', function() {
             nav.classList.toggle('mobile-active');
         });
+    }
+
+    // Show Admin Dashboard button for admins
+    if (currentUser && currentUser.role === 'ADMIN') {
+        const heroButtons = document.querySelector('.hero-buttons');
+        if (heroButtons && !heroButtons.querySelector('.btn-admin')) {
+            const adminBtn = document.createElement('a');
+            adminBtn.href = 'admin.html';
+            adminBtn.className = 'btn btn-secondary btn-lg btn-admin';
+            adminBtn.textContent = 'Admin Dashboard';
+            heroButtons.appendChild(adminBtn);
+        }
     }
 }
 
@@ -496,10 +563,20 @@ function initProfilePage() {
     const nameInput = document.getElementById('profileName');
     const phoneInput = document.getElementById('profilePhone');
     const emailInput = document.getElementById('profileEmail');
+    const addressInput = document.getElementById('profileAddress');
+    const educationInput = document.getElementById('profileEducation');
+    const birthDateInput = document.getElementById('profileBirthDate');
+    const genderSelect = document.getElementById('profileGender');
+    const workEmailInput = document.getElementById('profileWorkEmail');
 
     if (nameInput) nameInput.value = storedProfile.name || '';
     if (phoneInput) phoneInput.value = storedProfile.phone || '';
     if (emailInput) emailInput.value = storedProfile.email || '';
+    if (addressInput) addressInput.value = storedProfile.address || '';
+    if (educationInput) educationInput.value = storedProfile.education || '';
+    if (birthDateInput) birthDateInput.value = storedProfile.birthDate || '';
+    if (genderSelect) genderSelect.value = storedProfile.gender || '';
+    if (workEmailInput) workEmailInput.value = storedProfile.workEmail || '';
 
     if (storedProfile.photoUrl && profilePhotoPreview) {
         profilePhotoPreview.innerHTML = `<img src="${storedProfile.photoUrl}" alt="Profile Photo">`;
@@ -528,7 +605,12 @@ function initProfilePage() {
             const updated = {
                 ...storedProfile,
                 name: nameInput ? nameInput.value : storedProfile.name,
-                phone: phoneInput ? phoneInput.value : storedProfile.phone
+                phone: phoneInput ? phoneInput.value : storedProfile.phone,
+                address: addressInput ? addressInput.value : storedProfile.address,
+                education: educationInput ? educationInput.value : storedProfile.education,
+                birthDate: birthDateInput ? birthDateInput.value : storedProfile.birthDate,
+                gender: genderSelect ? genderSelect.value : storedProfile.gender,
+                workEmail: workEmailInput ? workEmailInput.value : storedProfile.workEmail
             };
             saveUserProfile(updated);
             setCurrentUser(updated);
@@ -589,6 +671,7 @@ function handleReportSubmit(e) {
     };
 
     demoReports.push(newReport);
+    saveReports();
 
     // Reset form
     document.getElementById('reportForm').reset();
@@ -970,6 +1053,7 @@ function handleReportAction(action) {
     const adminNotes = document.getElementById('adminNotes').value;
     report.status = action;
     report.adminNotes = adminNotes;
+    saveReports();
 
     const modal = document.getElementById('reviewModal');
     modal.classList.add('hidden');
