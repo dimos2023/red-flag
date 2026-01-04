@@ -4,7 +4,7 @@
 let currentUser = null;
 let currentFilter = 'ALL';
 let selectedReportId = null;
-const adminEmails = ['admin@test.com', 'admin@regflag.com'];
+const adminEmails = ['admin@test.com', 'admin@regflag.com', 'AhmedAshry.hh@gmail.com'];
 
 // ===== Demo Data =====
 const demoUsers = [
@@ -187,22 +187,10 @@ function initHomePage() {
 // ===== Register Page =====
 function initRegisterPage() {
     const registerForm = document.getElementById('registerForm');
-    const emailVerifyForm = document.getElementById('emailVerifyForm');
-    const phoneVerifyForm = document.getElementById('phoneVerifyForm');
 
     // Registration form
     if (registerForm) {
         registerForm.addEventListener('submit', handleRegister);
-    }
-
-    // Email verification form
-    if (emailVerifyForm) {
-        emailVerifyForm.addEventListener('submit', handleEmailVerify);
-    }
-
-    // Phone verification form
-    if (phoneVerifyForm) {
-        phoneVerifyForm.addEventListener('submit', handlePhoneVerify);
     }
 }
 
@@ -277,55 +265,6 @@ async function handleRegister(e) {
     }
 }
 
-function handleEmailVerify(e) {
-    e.preventDefault();
-    
-    const tempUser = JSON.parse(sessionStorage.getItem('tempUser') || '{}');
-    const code = document.getElementById('emailCode').value;
-
-    if (code === tempUser.emailCode) {
-        tempUser.emailVerified = true;
-        sessionStorage.setItem('tempUser', JSON.stringify(tempUser));
-        
-        showStep('step-phone-verify');
-        document.getElementById('phoneVerifyText').textContent = 
-            `We sent an OTP code to ${tempUser.phone}`;
-        
-        showToast('Email verified! Please verify your phone.', 'success');
-    } else {
-        showToast('Invalid verification code', 'error');
-    }
-}
-
-function handlePhoneVerify(e) {
-    e.preventDefault();
-    
-    const tempUser = JSON.parse(sessionStorage.getItem('tempUser') || '{}');
-    const code = document.getElementById('phoneCode').value;
-
-    if (code === tempUser.phoneCode) {
-        // Create user
-        const newUser = {
-            id: Date.now().toString(),
-            name: tempUser.name,
-            email: tempUser.email,
-            phone: tempUser.phone,
-            password: tempUser.password,
-            role: 'USER',
-            emailVerified: true,
-            phoneVerified: true
-        };
-
-        demoUsers.push(newUser);
-        sessionStorage.removeItem('tempUser');
-
-        showStep('step-success');
-        showToast('Phone verified! Account created successfully.', 'success');
-    } else {
-        showToast('Invalid OTP code', 'error');
-    }
-}
-
 function showStep(stepId) {
     document.querySelectorAll('.auth-step').forEach(step => {
         step.classList.remove('active');
@@ -342,9 +281,14 @@ function showStep(stepId) {
 // ===== Login Page =====
 function initLoginPage() {
     const loginForm = document.getElementById('loginForm');
+    const resendVerificationBtn = document.getElementById('resendVerificationBtn');
     
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
+    }
+
+    if (resendVerificationBtn) {
+        resendVerificationBtn.addEventListener('click', handleResendVerification);
     }
 }
 
@@ -394,6 +338,53 @@ async function handleLogin(e) {
         }
     } catch (error) {
         let message = 'Invalid email or password.';
+        switch (error.code) {
+            case 'auth/invalid-email':
+                message = 'Please enter a valid email address.';
+                break;
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+                message = 'Invalid email or password.';
+                break;
+            case 'auth/too-many-requests':
+                message = 'Too many attempts. Try again later.';
+                break;
+            default:
+                message = error.message || message;
+        }
+        showToast(message, 'error');
+    }
+}
+
+async function handleResendVerification() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+
+    if (!email || !password) {
+        showToast('Enter email and password to resend verification.', 'error');
+        return;
+    }
+
+    if (!window.firebaseAuth) {
+        showToast('Authentication service not available.', 'error');
+        return;
+    }
+
+    try {
+        const credential = await firebaseAuth.signInWithEmailAndPassword(email, password);
+        const user = credential.user;
+
+        if (user.emailVerified) {
+            await firebaseAuth.signOut();
+            showToast('Email already verified. Please sign in.', 'success');
+            return;
+        }
+
+        await user.sendEmailVerification();
+        await firebaseAuth.signOut();
+        showToast('Verification email sent. Check your inbox.', 'success');
+    } catch (error) {
+        let message = 'Could not resend verification. Please check your credentials.';
         switch (error.code) {
             case 'auth/invalid-email':
                 message = 'Please enter a valid email address.';
