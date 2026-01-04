@@ -169,8 +169,8 @@
                     <div class="success-content">
                         <div class="success-icon">✅</div>
                         <h1 class="auth-title">Account Created!</h1>
-                        <p class="auth-description">
-                            Your account has been created and verified successfully.
+                        <p class="auth-description" id="registerSuccessText">
+                            Your account has been created. Please verify your email from your inbox, then sign in.
                         </p>
                         <a href="login.html" class="btn btn-primary btn-full">
                             Go to Login
@@ -190,6 +190,9 @@
         </div>
     </footer>
 
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="firebase-init.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

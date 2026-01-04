@@ -4,6 +4,7 @@
 let currentUser = null;
 let currentFilter = 'ALL';
 let selectedReportId = null;
+const adminEmails = ['admin@test.com', 'admin@regflag.com'];
 
 // ===== Demo Data =====
 const demoUsers = [
@@ -67,6 +68,63 @@ let demoReports = [
         createdAt: new Date('2025-01-05').toISOString()
     }
 ];
+
+// ===== Auth Helpers (Firebase + local persistence) =====
+function isAdminEmail(email = '') {
+    const target = email.toLowerCase();
+    return adminEmails.some(a => a.toLowerCase() === target);
+}
+
+function getStoredUserProfile(uid) {
+    const raw = localStorage.getItem(`userProfile_${uid}`);
+    return raw ? JSON.parse(raw) : null;
+}
+
+function saveUserProfile(profile) {
+    if (!profile || !profile.id) return;
+    localStorage.setItem(`userProfile_${profile.id}`, JSON.stringify(profile));
+}
+
+function buildLocalProfile(user, phone = '') {
+    if (!user) return null;
+    const role = isAdminEmail(user.email) ? 'ADMIN' : 'USER';
+    return {
+        id: user.uid,
+        name: user.displayName || (user.email ? user.email.split('@')[0] : 'User'),
+        email: user.email,
+        phone: phone || '',
+        role,
+        emailVerified: user.emailVerified,
+        phoneVerified: true
+    };
+}
+
+function ensureDemoUser(profile) {
+    if (!profile) return;
+    if (!demoUsers.find(u => u.id === profile.id)) {
+        demoUsers.push({
+            id: profile.id,
+            name: profile.name || 'User',
+            email: profile.email,
+            phone: profile.phone || '',
+            password: profile.password || '',
+            role: profile.role || 'USER',
+            emailVerified: profile.emailVerified,
+            phoneVerified: profile.phoneVerified
+        });
+    }
+}
+
+function setCurrentUser(profile) {
+    currentUser = profile;
+    localStorage.setItem('currentUser', JSON.stringify(profile));
+    ensureDemoUser(profile);
+}
+
+function clearCurrentUser() {
+    currentUser = null;
+    localStorage.removeItem('currentUser');
+}
 
 // ===== Initialize =====
 document.addEventListener('DOMContentLoaded', function() {
@@ -148,7 +206,7 @@ function initRegisterPage() {
     }
 }
 
-function handleRegister(e) {
+async function handleRegister(e) {
     e.preventDefault();
     
     const name = document.getElementById('name').value;
@@ -168,44 +226,55 @@ function handleRegister(e) {
         return;
     }
 
-    // Check if email already exists
-    if (demoUsers.find(u => u.email === email)) {
-        showToast('Email already registered', 'error');
+    if (!window.firebaseAuth) {
+        showToast('Authentication service not available.', 'error');
         return;
     }
 
-    if (demoUsers.find(u => u.phone === phone)) {
-        showToast('Phone number already registered', 'error');
-        return;
+    try {
+        const credential = await firebaseAuth.createUserWithEmailAndPassword(email, password);
+        const user = credential.user;
+
+        // Save display name
+        if (user && name) {
+            await user.updateProfile({ displayName: name });
+        }
+
+        // Build and persist local profile for demo features
+        const profile = buildLocalProfile(user, phone);
+        saveUserProfile(profile);
+        ensureDemoUser(profile);
+
+        // Send verification email and sign out to enforce verification
+        await user.sendEmailVerification();
+        await firebaseAuth.signOut();
+
+        // Move to success step
+        showStep('step-success');
+        const successText = document.getElementById('registerSuccessText');
+        if (successText) {
+            successText.textContent = 'Check your email for the verification link, then sign in.';
+        }
+
+        document.getElementById('registerForm').reset();
+        showToast('Account created. Verify your email, then log in.', 'success');
+    } catch (error) {
+        let message = 'Registration failed. Please try again.';
+        switch (error.code) {
+            case 'auth/email-already-in-use':
+                message = 'This email is already registered.';
+                break;
+            case 'auth/invalid-email':
+                message = 'Please enter a valid email address.';
+                break;
+            case 'auth/weak-password':
+                message = 'Password is too weak. Use at least 8 characters.';
+                break;
+            default:
+                message = error.message || message;
+        }
+        showToast(message, 'error');
     }
-
-    // Generate verification codes
-    const emailCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const phoneCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // Store in sessionStorage for demo
-    sessionStorage.setItem('tempUser', JSON.stringify({
-        name,
-        email,
-        phone,
-        password,
-        emailCode,
-        phoneCode
-    }));
-
-    // Show codes in console (for demo)
-    console.log('Email verification code:', emailCode);
-    console.log('Phone verification code:', phoneCode);
-    
-    // Show codes in alert for demo
-    alert(`Demo Verification Codes:\nEmail: ${emailCode}\nPhone: ${phoneCode}`);
-
-    // Move to email verification step
-    showStep('step-email-verify');
-    document.getElementById('emailVerifyText').textContent = 
-        `We sent a verification code to ${email}`;
-    
-    showToast('Registration successful! Please verify your email.', 'success');
 }
 
 function handleEmailVerify(e) {
@@ -279,40 +348,67 @@ function initLoginPage() {
     }
 }
 
-function handleLogin(e) {
+async function handleLogin(e) {
     e.preventDefault();
     
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
 
-    // Find user
-    const user = demoUsers.find(u => u.email === email && u.password === password);
-
-    if (!user) {
-        showToast('Invalid email or password', 'error');
+    if (!window.firebaseAuth) {
+        showToast('Authentication service not available.', 'error');
         return;
     }
 
-    if (!user.emailVerified || !user.phoneVerified) {
-        showToast('Please verify your email and phone number', 'error');
-        return;
-    }
+    try {
+        const credential = await firebaseAuth.signInWithEmailAndPassword(email, password);
+        const user = credential.user;
 
-    // Login successful
-    currentUser = user;
-    localStorage.setItem('currentUser', JSON.stringify(user));
+        if (!user.emailVerified) {
+            await user.sendEmailVerification();
+            await firebaseAuth.signOut();
+            showToast('Please verify your email. We just resent the verification link.', 'error');
+            return;
+        }
 
-    showToast('Login successful!', 'success');
+        // Build profile from stored data or fallback from Firebase user
+        const storedProfile = getStoredUserProfile(user.uid);
+        const profile = storedProfile || buildLocalProfile(user);
+        profile.role = isAdminEmail(user.email) ? 'ADMIN' : (profile.role || 'USER');
+        profile.emailVerified = true;
+        profile.phoneVerified = true;
 
-    // Redirect based on role
-    if (user.role === 'ADMIN') {
-        setTimeout(() => {
-            window.location.href = 'admin.html';
-        }, 1000);
-    } else {
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 1000);
+        saveUserProfile(profile);
+        setCurrentUser(profile);
+
+        showToast('Login successful!', 'success');
+
+        // Redirect based on role
+        if (profile.role === 'ADMIN') {
+            setTimeout(() => {
+                window.location.href = 'admin.html';
+            }, 1000);
+        } else {
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1000);
+        }
+    } catch (error) {
+        let message = 'Invalid email or password.';
+        switch (error.code) {
+            case 'auth/invalid-email':
+                message = 'Please enter a valid email address.';
+                break;
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+                message = 'Invalid email or password.';
+                break;
+            case 'auth/too-many-requests':
+                message = 'Too many attempts. Try again later.';
+                break;
+            default:
+                message = error.message || message;
+        }
+        showToast(message, 'error');
     }
 }
 
@@ -573,6 +669,20 @@ function displayResults(type, value, reports) {
 
 // ===== Admin Page =====
 function initAdminPage() {
+    // Hydrate currentUser from Firebase if available
+    if (!currentUser && window.firebaseAuth) {
+        const user = firebaseAuth.currentUser;
+        if (user && user.emailVerified) {
+            const storedProfile = getStoredUserProfile(user.uid);
+            const profile = storedProfile || buildLocalProfile(user);
+            profile.emailVerified = true;
+            profile.phoneVerified = true;
+            profile.role = isAdminEmail(user.email) ? 'ADMIN' : (profile.role || 'USER');
+            saveUserProfile(profile);
+            setCurrentUser(profile);
+        }
+    }
+
     // Check if user is admin
     if (!currentUser || currentUser.role !== 'ADMIN') {
         showToast('Admin access required', 'error');
@@ -771,12 +881,31 @@ function checkAuth() {
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
+        ensureDemoUser(currentUser);
+    }
+
+    if (window.firebaseAuth) {
+        firebaseAuth.onAuthStateChanged(user => {
+            if (user && user.emailVerified) {
+                const storedProfile = getStoredUserProfile(user.uid);
+                const profile = storedProfile || buildLocalProfile(user);
+                profile.emailVerified = true;
+                profile.phoneVerified = true;
+                profile.role = isAdminEmail(user.email) ? 'ADMIN' : (profile.role || 'USER');
+                saveUserProfile(profile);
+                setCurrentUser(profile);
+            } else if (!user) {
+                clearCurrentUser();
+            }
+        });
     }
 }
 
 function handleLogout() {
-    currentUser = null;
-    localStorage.removeItem('currentUser');
+    if (window.firebaseAuth) {
+        firebaseAuth.signOut();
+    }
+    clearCurrentUser();
     showToast('Logged out successfully', 'success');
     setTimeout(() => {
         window.location.href = 'login.html';
