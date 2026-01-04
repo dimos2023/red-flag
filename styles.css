@@ -296,6 +296,14 @@ main {
     line-height: 1.8;
 }
 
+.hero-subline {
+    font-size: var(--font-size-xl);
+    color: #ffffff;
+    font-weight: 700;
+    max-width: 42rem;
+    margin: 0 auto var(--spacing-lg);
+}
+
 .hero-buttons {
     display: flex;
     gap: var(--spacing-md);
@@ -1514,7 +1522,8 @@ main {
 /* Improve text visibility */
 .hero-title,
 .hero-description,
-.hero-note {
+.hero-note,
+.hero-subline {
     color: #ffffff;
 }
 
