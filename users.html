@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users - Red Flag</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <span class="logo-icon">🚩</span>
+                    <span class="logo-text">Users</span>
+                </a>
+                <div class="header-actions">
+                    <span class="admin-badge">Admin</span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm">Back to Admin</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="admin-page">
+        <div class="container">
+            <div class="admin-header">
+                <h1 class="page-title">User Management</h1>
+                <p class="page-description">View, block/unblock, delete, and restore users.</p>
+            </div>
+
+            <div class="reports-container">
+                <h2 class="page-title" style="font-size: 1.5rem;">Active Users</h2>
+                <div id="adminUsersContainer"></div>
+            </div>
+
+            <div class="reports-container" style="margin-top: 2rem;">
+                <h2 class="page-title" style="font-size: 1.5rem;">Deleted Users</h2>
+                <div id="deletedUsersContainer"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-copyright">
+                Ac <span id="currentYear"></span> Red Flag. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="firebase-init.js"></script>
+    <script src="reports-db.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

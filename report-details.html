@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Details - Red Flag</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <span class="logo-icon">🚩</span>
+                    <span class="logo-text">Red Flag</span>
+                </a>
+                <div class="header-actions">
+                    <span class="admin-badge">Admin Review</span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm">Back to Admin</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-page">
+        <div class="container">
+            <div class="report-header" style="align-items: center;">
+                <div>
+                    <h1 class="page-title">Report Details</h1>
+                    <p class="page-description">Review all submitted data and attachments before deciding.</p>
+                </div>
+                <span id="reportStatus" class="admin-report-status status-pending">PENDING</span>
+            </div>
+
+            <!-- Details Card -->
+            <div class="report-card">
+                <div class="report-card-header">
+                    <h2 class="report-card-title">Submitted Information</h2>
+                    <p class="report-card-description">Full information as provided by the reporter.</p>
+                </div>
+                <div class="report-form" style="gap: var(--spacing-lg);">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Suspected Name</label>
+                            <p id="detailScammerName" class="report-detail-value">-</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone Number</label>
+                            <p id="detailPhone" class="report-detail-value">-</p>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Address</label>
+                            <p id="detailAddress" class="report-detail-value">-</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">National ID</label>
+                            <p id="detailNationalId" class="report-detail-value">-</p>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Reporter</label>
+                            <p id="detailReporter" class="report-detail-value">-</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Submitted At</label>
+                            <p id="detailCreatedAt" class="report-detail-value">-</p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <p id="detailDescription" class="report-detail-value" style="padding: var(--spacing-md); background: var(--color-gray-50); border-radius: var(--border-radius-md);">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attachments -->
+            <div class="report-card">
+                <div class="report-card-header">
+                    <h2 class="report-card-title">Attachments</h2>
+                    <p class="report-card-description">Uploaded evidence for this report.</p>
+                </div>
+                <div class="photo-upload-group">
+                    <div class="form-group">
+                        <label class="form-label">Profile Photo</label>
+                        <div class="file-preview" id="detailProfilePhoto">
+                            <div style="font-size: 0.9rem; color: var(--color-gray-500); text-align: center;">No profile photo uploaded</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">National ID Photo</label>
+                        <div class="file-preview" id="detailNationalIdPhoto">
+                            <div style="font-size: 0.9rem; color: var(--color-gray-500); text-align: center;">No ID photo uploaded</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Decision -->
+            <div class="report-card">
+                <div class="report-card-header">
+                    <h2 class="report-card-title">Review & Decision</h2>
+                    <p class="report-card-description">Add notes and set the final status.</p>
+                </div>
+                <div class="form-group">
+                    <label for="adminNotesInput" class="form-label">Admin Notes</label>
+                    <textarea 
+                        id="adminNotesInput" 
+                        name="adminNotesInput" 
+                        class="form-textarea" 
+                        placeholder="Why approve or reject this report?"
+                        rows="4"
+                    ></textarea>
+                </div>
+                <div class="admin-report-actions" style="gap: var(--spacing-md);">
+                    <button id="rejectReportBtn" class="btn btn-danger btn-sm">Reject Report</button>
+                    <button id="approveReportBtn" class="btn btn-success btn-sm">Approve Report</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-copyright">
+                Ac <span id="currentYear"></span> Red Flag. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="firebase-init.js"></script>
+    <script src="reports-db.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

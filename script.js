@@ -7,6 +7,8 @@ let selectedReportId = null;
 const adminEmails = ['admin@test.com', 'admin@regflag.com', 'AhmedAshry.hh@gmail.com'];
 const REPORTS_STORAGE_KEY = 'reportsData';
 const DELETED_REPORTS_STORAGE_KEY = 'deletedReportsData';
+const BLOCKED_USERS_STORAGE_KEY = 'blockedUsersData';
+const DELETED_USERS_STORAGE_KEY = 'deletedUsersData';
 
 // ===== Demo Data =====
 const demoUsers = [
@@ -32,45 +34,10 @@ const demoUsers = [
     }
 ];
 
-let demoReports = [
-    {
-        id: '1',
-        scammerPhone: '+1234567890',
-        scammerName: 'John Smith',
-        scammerAddress: 'New York, USA',
-        scammerNationalId: '123456789',
-        description: 'This person contacted me via phone claiming to be from a tech support company. They asked for remote access to my computer and $500 for "virus removal". After paying, they never contacted me again.',
-        status: 'APPROVED',
-        reporterId: '1',
-        adminNotes: 'Valid report with detailed information.',
-        createdAt: new Date('2024-12-15').toISOString()
-    },
-    {
-        id: '2',
-        scammerPhone: '+1111111111',
-        scammerName: 'Fake Investment',
-        scammerAddress: 'Unknown',
-        scammerNationalId: null,
-        description: 'Promised high returns on investment. After depositing $2000, they disappeared and blocked all communication.',
-        status: 'APPROVED',
-        reporterId: '1',
-        adminNotes: 'Clear investment scam pattern.',
-        createdAt: new Date('2024-12-10').toISOString()
-    },
-    {
-        id: '3',
-        scammerPhone: '+2222222222',
-        scammerName: 'Online Shop Scammer',
-        scammerAddress: 'Unknown',
-        scammerNationalId: null,
-        description: 'Ordered products online, paid in advance, never received items. Seller stopped responding.',
-        status: 'PENDING',
-        reporterId: '1',
-        adminNotes: null,
-        createdAt: new Date('2025-01-05').toISOString()
-    }
-];
+let demoReports = [];
 let deletedReports = [];
+let blockedUsers = [];
+let deletedUsers = [];
 
 // ===== Auth Helpers (Firebase + local persistence) =====
 function isAdminEmail(email = '') {
@@ -119,6 +86,61 @@ function ensureDemoUser(profile) {
 }
 
 // ===== Reports Persistence =====
+function initReportData() {
+    if (window.ReportDB) {
+        demoReports = ReportDB.getAll();
+        deletedReports = ReportDB.getDeleted();
+        return;
+    }
+
+    loadStoredReports();
+    loadStoredDeletedReports();
+}
+
+function loadBlockedUsers() {
+    try {
+        const stored = localStorage.getItem(BLOCKED_USERS_STORAGE_KEY);
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+                blockedUsers = parsed;
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to load blocked users', e);
+    }
+}
+
+function saveBlockedUsers() {
+    try {
+        localStorage.setItem(BLOCKED_USERS_STORAGE_KEY, JSON.stringify(blockedUsers));
+    } catch (e) {
+        console.warn('Failed to save blocked users', e);
+    }
+}
+
+function loadDeletedUsers() {
+    try {
+        const stored = localStorage.getItem(DELETED_USERS_STORAGE_KEY);
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+                deletedUsers = parsed;
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to load deleted users', e);
+    }
+}
+
+function saveDeletedUsers() {
+    try {
+        localStorage.setItem(DELETED_USERS_STORAGE_KEY, JSON.stringify(deletedUsers));
+    } catch (e) {
+        console.warn('Failed to save deleted users', e);
+    }
+}
+
 function loadStoredReports() {
     try {
         const stored = localStorage.getItem(REPORTS_STORAGE_KEY);
@@ -163,6 +185,59 @@ function saveDeletedReports() {
     }
 }
 
+function getReportById(id) {
+    const source = window.ReportDB ? ReportDB.getAll() : demoReports;
+    return source.find(r => r.id === id);
+}
+
+function getAllStoredProfiles() {
+    const profiles = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('userProfile_')) {
+            try {
+                const parsed = JSON.parse(localStorage.getItem(key));
+                if (parsed && parsed.id) {
+                    profiles.push(parsed);
+                }
+            } catch (e) {
+                continue;
+            }
+        }
+    }
+    return profiles;
+}
+
+function getAllUsersForAdmin() {
+    const storedProfiles = getAllStoredProfiles();
+    const merged = [...demoUsers];
+    const deletedIds = new Set(deletedUsers.map(u => u.id));
+    const deletedEmails = new Set(deletedUsers.map(u => (u.email || '').toLowerCase()));
+
+    storedProfiles.forEach(p => {
+        const emailLower = (p.email || '').toLowerCase();
+        if (deletedIds.has(p.id) || deletedEmails.has(emailLower)) return;
+        if (!merged.find(u => u.id === p.id || (u.email && u.email.toLowerCase() === emailLower))) {
+            merged.push({
+                ...p,
+                role: isAdminEmail(p.email) ? 'ADMIN' : (p.role || 'USER')
+            });
+        }
+    });
+
+    return merged.filter(u => !deletedIds.has(u.id) && !(u.email && deletedEmails.has(u.email.toLowerCase())));
+}
+
+function getBlockRecord(email, uid) {
+    const targetEmail = (email || '').toLowerCase();
+    return blockedUsers.find(b => b.email.toLowerCase() === targetEmail || (uid && b.id === uid)) || null;
+}
+
+function getDeletionRecord(email, uid) {
+    const targetEmail = (email || '').toLowerCase();
+    return deletedUsers.find(d => d.email.toLowerCase() === targetEmail || (uid && d.id === uid)) || null;
+}
+
 function setCurrentUser(profile) {
     currentUser = profile;
     localStorage.setItem('currentUser', JSON.stringify(profile));
@@ -182,11 +257,14 @@ function updateNavAuthUI() {
         const loginLink = nav.querySelector('a[href="login.html"]');
         const registerLink = nav.querySelector('a[href="register.html"]');
         let adminLink = nav.querySelector('a.admin-link');
-        let profileLink = nav.querySelector('a[href="profile.html"]');
         let userPill = nav.querySelector('.user-pill');
         let logoutBtn = nav.querySelector('.logout-btn');
 
         if (currentUser) {
+            const blockRecord = getBlockRecord(currentUser.email, currentUser.id);
+            if (blockRecord) {
+                showToast('Your account is blocked by admin. Reason: ' + (blockRecord.reason || 'Security'), 'error');
+            }
             if (loginLink) loginLink.classList.add('hidden');
             if (registerLink) registerLink.classList.add('hidden');
             // Admin link
@@ -203,23 +281,21 @@ function updateNavAuthUI() {
                 adminLink.remove();
             }
 
-            if (!profileLink) {
-                profileLink = document.createElement('a');
-                profileLink.href = 'profile.html';
-                profileLink.className = 'nav-link';
-                profileLink.textContent = 'Profile';
-                nav.insertBefore(profileLink, nav.firstChild);
-            }
-
             if (!userPill) {
-                userPill = document.createElement('button');
+                userPill = document.createElement('a');
+                userPill.href = 'profile.html';
                 userPill.className = 'user-pill';
-                userPill.type = 'button';
                 nav.appendChild(userPill);
             }
 
             const displayName = currentUser.name || currentUser.email || 'User';
-            userPill.textContent = displayName;
+            const avatarHtml = currentUser.photoUrl 
+                ? `<img src="${currentUser.photoUrl}" alt="${displayName}">`
+                : `<span class="avatar-fallback">${displayName.charAt(0).toUpperCase()}</span>`;
+            userPill.innerHTML = `
+                <span class="user-avatar">${avatarHtml}</span>
+                <span class="user-name">${displayName}</span>
+            `;
             userPill.classList.remove('hidden');
 
             if (!logoutBtn) {
@@ -235,7 +311,6 @@ function updateNavAuthUI() {
             if (loginLink) loginLink.classList.remove('hidden');
             if (registerLink) registerLink.classList.remove('hidden');
             if (adminLink) adminLink.remove();
-            if (profileLink) profileLink.remove();
             if (userPill) {
                 userPill.remove();
             }
@@ -254,9 +329,16 @@ document.addEventListener('DOMContentLoaded', function() {
         el.textContent = new Date().getFullYear();
     });
 
+    // Sync logo text with current page title
+    const pageTitle = document.title || 'Red Flag';
+    document.querySelectorAll('.logo-text').forEach(el => {
+        el.textContent = pageTitle;
+    });
+
     // Load persisted reports
-    loadStoredReports();
-    loadStoredDeletedReports();
+    initReportData();
+    loadBlockedUsers();
+    loadDeletedUsers();
 
     // Check for logged in user
     checkAuth();
@@ -289,8 +371,17 @@ function initPage() {
         case 'search-results.html':
             initSearchResultsPage();
             break;
+        case 'report-details.html':
+            initReportDetailsPage();
+            break;
         case 'admin.html':
             initAdminPage();
+            break;
+        case 'user-details.html':
+            initUserDetailsPage();
+            break;
+        case 'users.html':
+            initUsersPage();
             break;
         case 'profile.html':
             initProfilePage();
@@ -453,6 +544,20 @@ async function handleLogin(e) {
             return;
         }
 
+        const blockRecord = getBlockRecord(user.email, user.uid);
+        if (blockRecord) {
+            await firebaseAuth.signOut();
+            showToast(`Account blocked by admin. Reason: ${blockRecord.reason || 'Security reasons'}`, 'error');
+            return;
+        }
+
+        const deletionRecord = getDeletionRecord(user.email, user.uid);
+        if (deletionRecord) {
+            await firebaseAuth.signOut();
+            showToast('Account removed by admin. Contact support to restore access.', 'error');
+            return;
+        }
+
         // Build profile from stored data or fallback from Firebase user
         const storedProfile = getStoredUserProfile(user.uid);
         const profile = storedProfile || buildLocalProfile(user);
@@ -566,6 +671,19 @@ function initReportPage() {
             handleFilePreview(e, 'nationalIdPreview');
         });
     }
+
+    // Make the dashed upload boxes clickable to open the hidden file inputs
+    document.querySelectorAll('.file-upload').forEach(box => {
+        const input = box.querySelector('.file-input');
+        if (!input) return;
+        box.addEventListener('click', () => input.click());
+        box.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                input.click();
+            }
+        });
+    });
 }
 
 // ===== Profile Page =====
@@ -608,18 +726,38 @@ function initProfilePage() {
     }
 
     if (profilePhotoInput) {
-        profilePhotoInput.addEventListener('change', function(e) {
+        // Allow click on preview box to open file picker
+        const uploadBox = profilePhotoInput.closest('.file-upload');
+        if (uploadBox) {
+            uploadBox.addEventListener('click', () => profilePhotoInput.click());
+            uploadBox.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    profilePhotoInput.click();
+                }
+            });
+        }
+
+        profilePhotoInput.addEventListener('change', async function(e) {
             const file = e.target.files[0];
-            if (file && profilePhotoPreview) {
-                const reader = new FileReader();
-                reader.onload = function(ev) {
-                    profilePhotoPreview.innerHTML = `<img src="${ev.target.result}" alt="Profile Photo">`;
-                    storedProfile.photoUrl = ev.target.result;
-                    saveUserProfile({ ...storedProfile, photoUrl: ev.target.result });
-                    setCurrentUser({ ...storedProfile, photoUrl: ev.target.result });
-                    updateNavAuthUI();
-                };
-                reader.readAsDataURL(file);
+            if (!file || !profilePhotoPreview) return;
+
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            if (file.size > maxSize) {
+                showToast('Profile photo exceeds 5MB limit', 'error');
+                return;
+            }
+
+            try {
+                const dataUrl = await readFileAsDataURL(file);
+                profilePhotoPreview.innerHTML = `<img src="${dataUrl}" alt="Profile Photo">`;
+                storedProfile.photoUrl = dataUrl;
+                saveUserProfile({ ...storedProfile, photoUrl: dataUrl });
+                setCurrentUser({ ...storedProfile, photoUrl: dataUrl });
+                updateNavAuthUI();
+                showToast('Profile photo updated', 'success');
+            } catch (err) {
+                showToast('Failed to load profile photo. Try again.', 'error');
             }
         });
     }
@@ -658,7 +796,16 @@ function handleFilePreview(event, previewId) {
     }
 }
 
-function handleReportSubmit(e) {
+function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+    });
+}
+
+async function handleReportSubmit(e) {
     e.preventDefault();
     
     // Check if user is logged in
@@ -675,9 +822,39 @@ function handleReportSubmit(e) {
     const scammerAddress = document.getElementById('scammerAddress').value;
     const scammerNationalId = document.getElementById('scammerNationalId').value;
     const description = document.getElementById('description').value;
+    const profilePhotoInput = document.getElementById('profilePhoto');
+    const nationalIdPhotoInput = document.getElementById('nationalIdPhoto');
 
     if (!scammerPhone || !description) {
         showToast('Please fill in all required fields', 'error');
+        return;
+    }
+
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const profileFile = profilePhotoInput && profilePhotoInput.files ? profilePhotoInput.files[0] : null;
+    const idFile = nationalIdPhotoInput && nationalIdPhotoInput.files ? nationalIdPhotoInput.files[0] : null;
+
+    if (profileFile && profileFile.size > maxSize) {
+        showToast('Profile photo exceeds 5MB limit', 'error');
+        return;
+    }
+    if (idFile && idFile.size > maxSize) {
+        showToast('National ID photo exceeds 5MB limit', 'error');
+        return;
+    }
+
+    let profilePhotoData = null;
+    let nationalIdPhotoData = null;
+
+    try {
+        if (profileFile) {
+            profilePhotoData = await readFileAsDataURL(profileFile);
+        }
+        if (idFile) {
+            nationalIdPhotoData = await readFileAsDataURL(idFile);
+        }
+    } catch (err) {
+        showToast('Failed to read attached files. Please try again.', 'error');
         return;
     }
 
@@ -692,11 +869,18 @@ function handleReportSubmit(e) {
         status: 'PENDING',
         reporterId: currentUser.id,
         adminNotes: null,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        profilePhoto: profilePhotoData,
+        nationalIdPhoto: nationalIdPhotoData
     };
 
-    demoReports.push(newReport);
-    saveReports();
+    if (window.ReportDB) {
+        ReportDB.addReport(newReport);
+        demoReports = ReportDB.getAll();
+    } else {
+        demoReports.push(newReport);
+        saveReports();
+    }
 
     // Reset form
     document.getElementById('reportForm').reset();
@@ -788,8 +972,9 @@ function performSearch(type, value) {
 
 function searchReports(type, value) {
     const searchTerm = value.toLowerCase();
+    const sourceReports = window.ReportDB ? ReportDB.getAll() : demoReports;
     
-    return demoReports.filter(report => {
+    return sourceReports.filter(report => {
         if (report.status !== 'APPROVED') return false;
 
         switch(type) {
@@ -904,6 +1089,8 @@ function initAdminPage() {
 
     // Load reports
     loadReports();
+    renderUsers();
+    renderDeletedUsersList();
 
     // Filter buttons
     document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -965,6 +1152,11 @@ function loadReports() {
     const reportsContainer = document.getElementById('adminReportsContainer');
     const noReports = document.getElementById('noReports');
 
+    if (window.ReportDB) {
+        demoReports = ReportDB.getAll();
+        deletedReports = ReportDB.getDeleted();
+    }
+
     if (loadingState) loadingState.classList.remove('hidden');
     if (reportsContainer) reportsContainer.innerHTML = '';
     if (noReports) noReports.classList.add('hidden');
@@ -1004,6 +1196,10 @@ function renderDeletedReports() {
     const noDeleted = document.getElementById('noDeletedReports');
     if (!container) return;
 
+    if (window.ReportDB) {
+        deletedReports = ReportDB.getDeleted();
+    }
+
     if (deletedReports.length === 0) {
         container.innerHTML = '';
         if (noDeleted) noDeleted.classList.remove('hidden');
@@ -1025,6 +1221,14 @@ function renderDeletedReports() {
             <p style="margin-bottom: 1rem; font-size: 0.875rem; color: #6b7280;">
                 ${report.description.substring(0, 120)}${report.description.length > 120 ? '...' : ''}
             </p>
+            <div class="admin-report-actions" style="gap: var(--spacing-sm);">
+                <button class="btn btn-secondary btn-sm" onclick="restoreReport('${report.id}', false)">
+                    Restore
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="restoreReport('${report.id}', true)">
+                    Restore & Review
+                </button>
+            </div>
         </div>
     `).join('');
 }
@@ -1048,9 +1252,9 @@ function createAdminReportCard(report, reporter) {
             ${report.description.substring(0, 100)}${report.description.length > 100 ? '...' : ''}
         </p>
         <div class="admin-report-actions">
-            <button class="btn btn-secondary btn-sm" onclick="viewReportDetails('${report.id}')">
+            <a class="btn btn-secondary btn-sm" href="report-details.html?id=${report.id}">
                 View Details
-            </button>
+            </a>
             ${report.status === 'PENDING' ? `
             <button class="btn btn-success btn-sm" onclick="openReviewModal('${report.id}')">
                 Approve
@@ -1108,16 +1312,27 @@ function openReviewModal(reportId) {
 }
 
 function handleReportAction(action) {
-    const report = demoReports.find(r => r.id === selectedReportId);
-    if (!report) return;
-
-    const adminNotes = document.getElementById('adminNotes').value;
-    report.status = action;
-    report.adminNotes = adminNotes;
-    saveReports();
+    const adminNotes = (document.getElementById('adminNotes').value || '').trim();
+    if (action === 'REJECTED' && !adminNotes) {
+        showToast('Please add a rejection reason before rejecting.', 'error');
+        return;
+    }
 
     const modal = document.getElementById('reviewModal');
-    modal.classList.add('hidden');
+    if (window.ReportDB) {
+        ReportDB.updateStatus(selectedReportId, action, adminNotes);
+        demoReports = ReportDB.getAll();
+    } else {
+        const report = demoReports.find(r => r.id === selectedReportId);
+        if (!report) return;
+        report.status = action;
+        report.adminNotes = adminNotes;
+        saveReports();
+    }
+
+    if (modal) {
+        modal.classList.add('hidden');
+    }
 
     showToast(action === 'APPROVED' ? 'Report approved successfully' : 'Report rejected', 'success');
     loadReports();
@@ -1127,18 +1342,383 @@ function deleteReport(reportId) {
     const confirmDelete = window.confirm('Are you sure you want to delete this report?');
     if (!confirmDelete) return;
 
-    const report = demoReports.find(r => r.id === reportId);
-    if (!report) return;
+    if (window.ReportDB) {
+        ReportDB.deleteReport(reportId);
+        demoReports = ReportDB.getAll();
+        deletedReports = ReportDB.getDeleted();
+    } else {
+        const report = demoReports.find(r => r.id === reportId);
+        if (!report) return;
 
-    // Move to deleted bucket
-    deletedReports.push({ ...report, deletedAt: new Date().toISOString() });
-    saveDeletedReports();
+        // Move to deleted bucket
+        deletedReports.push({ ...report, deletedAt: new Date().toISOString() });
+        saveDeletedReports();
 
-    demoReports = demoReports.filter(r => r.id !== reportId);
-    saveReports();
+        demoReports = demoReports.filter(r => r.id !== reportId);
+        saveReports();
+    }
+
     showToast('Report deleted', 'success');
     loadReports();
     renderDeletedReports();
+}
+
+// ===== Report Details Page =====
+function initReportDetailsPage() {
+    const params = new URLSearchParams(window.location.search);
+    const reportId = params.get('id');
+
+    if (window.ReportDB) {
+        demoReports = ReportDB.getAll();
+        deletedReports = ReportDB.getDeleted();
+    } else {
+        loadStoredReports();
+    }
+
+    if (!reportId) {
+        showToast('Invalid report ID', 'error');
+        setTimeout(() => window.location.href = 'admin.html', 1200);
+        return;
+    }
+
+    const report = getReportById(reportId);
+    if (!report) {
+        showToast('Report not found', 'error');
+        setTimeout(() => window.location.href = 'admin.html', 1200);
+        return;
+    }
+
+    const reporterProfile = getStoredUserProfile(report.reporterId) || demoUsers.find(u => u.id === report.reporterId);
+
+    setDetailText('detailScammerName', report.scammerName || 'Unknown');
+    setDetailText('detailPhone', report.scammerPhone || 'Not provided');
+    setDetailText('detailAddress', report.scammerAddress || 'Not provided');
+    setDetailText('detailNationalId', report.scammerNationalId || 'Not provided');
+    setDetailText('detailDescription', report.description || 'No description provided');
+    setDetailText('detailReporter', reporterProfile ? `${reporterProfile.name || 'Reporter'} (${reporterProfile.email || 'No email'})` : 'Reporter information not available');
+    setDetailText('detailCreatedAt', report.createdAt ? new Date(report.createdAt).toLocaleString() : 'Not available');
+
+    const statusEl = document.getElementById('reportStatus');
+    if (statusEl) {
+        const statusClass = `status-${report.status.toLowerCase()}`;
+        statusEl.className = `admin-report-status ${statusClass}`;
+        statusEl.textContent = report.status;
+    }
+
+    const notesInput = document.getElementById('adminNotesInput');
+    if (notesInput) {
+        notesInput.value = report.adminNotes || '';
+    }
+
+    renderDetailAttachment('detailProfilePhoto', report.profilePhoto, 'No profile photo uploaded');
+    renderDetailAttachment('detailNationalIdPhoto', report.nationalIdPhoto, 'No ID photo uploaded');
+
+    const approveBtn = document.getElementById('approveReportBtn');
+    const rejectBtn = document.getElementById('rejectReportBtn');
+
+    if (approveBtn) {
+        approveBtn.addEventListener('click', () => updateDetailStatus(reportId, 'APPROVED'));
+    }
+    if (rejectBtn) {
+        rejectBtn.addEventListener('click', () => updateDetailStatus(reportId, 'REJECTED'));
+    }
+}
+
+// ===== User Details Page =====
+function initUserDetailsPage() {
+    const params = new URLSearchParams(window.location.search);
+    const userId = params.get('id');
+    if (!userId) {
+        showToast('Invalid user ID', 'error');
+        setTimeout(() => window.location.href = 'admin.html', 1200);
+        return;
+    }
+
+    const user = getAllUsersForAdmin().find(u => u.id === userId);
+    if (!user) {
+        showToast('User not found', 'error');
+        setTimeout(() => window.location.href = 'admin.html', 1200);
+        return;
+    }
+
+    const blockRecord = getBlockRecord(user.email, user.id);
+    const statusEl = document.getElementById('userStatus');
+    if (statusEl) {
+        statusEl.className = `admin-report-status ${blockRecord ? 'status-rejected' : 'status-approved'}`;
+        statusEl.textContent = blockRecord ? 'BLOCKED' : 'ACTIVE';
+    }
+
+    const avatarEl = document.getElementById('userAvatar');
+    if (avatarEl) {
+        if (user.photoUrl) {
+            avatarEl.innerHTML = `<img src="${user.photoUrl}" alt="${user.name || user.email}">`;
+        } else {
+            avatarEl.innerHTML = `<span class="avatar-fallback">${(user.name || user.email || 'U').charAt(0).toUpperCase()}</span>`;
+        }
+    }
+
+    setDetailText('userName', user.name || 'User');
+    setDetailText('userEmail', user.email || '-');
+    setDetailText('userPhone', user.phone || '-');
+    setDetailText('userAddress', user.address || '-');
+    setDetailText('userEducation', user.education || '-');
+    setDetailText('userBirthDate', user.birthDate || '-');
+    setDetailText('userGender', user.gender || '-');
+    setDetailText('userWorkEmail', user.workEmail || '-');
+
+    const blockText = document.getElementById('blockReasonText');
+    if (blockText) {
+        blockText.textContent = blockRecord ? `Blocked Reason: ${blockRecord.reason || 'Security'}` : '';
+    }
+
+    const blockBtn = document.getElementById('blockUserBtn');
+    const unblockBtn = document.getElementById('unblockUserBtn');
+
+    if (blockBtn) {
+        blockBtn.addEventListener('click', () => {
+            blockUser(user.id, user.email);
+            initUserDetailsPage();
+        });
+    }
+    if (unblockBtn) {
+        unblockBtn.addEventListener('click', () => {
+            unblockUser(user.id, user.email);
+            initUserDetailsPage();
+        });
+    }
+}
+
+function setDetailText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+}
+
+function renderDetailAttachment(containerId, dataUrl, placeholder) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    if (dataUrl) {
+        container.innerHTML = `<img src="${dataUrl}" alt="${placeholder}" style="width: 100%; height: 100%; object-fit: cover;">`;
+    } else {
+        container.innerHTML = `<div style="font-size: 0.9rem; color: var(--color-gray-500); text-align: center;">${placeholder}</div>`;
+    }
+}
+
+function updateDetailStatus(reportId, status) {
+    const notesInput = document.getElementById('adminNotesInput');
+    const adminNotes = notesInput ? (notesInput.value || '').trim() : '';
+
+    if (status === 'REJECTED' && !adminNotes) {
+        showToast('Please add a rejection reason before rejecting.', 'error');
+        return;
+    }
+
+    if (window.ReportDB) {
+        ReportDB.updateStatus(reportId, status, adminNotes);
+        demoReports = ReportDB.getAll();
+    } else {
+        const report = demoReports.find(r => r.id === reportId);
+        if (!report) return;
+        report.status = status;
+        report.adminNotes = adminNotes;
+        saveReports();
+    }
+
+    const statusEl = document.getElementById('reportStatus');
+    if (statusEl) {
+        statusEl.className = `admin-report-status status-${status.toLowerCase()}`;
+        statusEl.textContent = status;
+    }
+
+    showToast(status === 'APPROVED' ? 'Report approved' : 'Report rejected', 'success');
+    setTimeout(() => window.location.href = 'admin.html', 800);
+}
+
+// ===== Users Page =====
+function initUsersPage() {
+    renderUsers();
+    renderDeletedUsersList();
+}
+
+function restoreReport(reportId, openAfterRestore = false) {
+    let restored = null;
+    if (window.ReportDB) {
+        restored = ReportDB.restore(reportId, 'PENDING');
+        demoReports = ReportDB.getAll();
+        deletedReports = ReportDB.getDeleted();
+    } else {
+        const report = deletedReports.find(r => r.id === reportId);
+        if (!report) return;
+        const restoredReport = { ...report, status: 'PENDING', restoredAt: new Date().toISOString() };
+        deletedReports = deletedReports.filter(r => r.id !== reportId);
+        demoReports = [restoredReport, ...demoReports];
+        saveDeletedReports();
+        saveReports();
+        restored = restoredReport;
+    }
+
+    showToast('Report restored for review', 'success');
+    loadReports();
+    renderDeletedReports();
+
+    if (openAfterRestore && restored) {
+        setTimeout(() => {
+            window.location.href = `report-details.html?id=${restored.id}`;
+        }, 300);
+    }
+}
+
+function renderUsers() {
+    const container = document.getElementById('adminUsersContainer');
+    if (!container) return;
+    const users = getAllUsersForAdmin();
+    const blockMap = new Map(blockedUsers.map(b => [b.id || b.email, b]));
+
+    if (users.length === 0) {
+        container.innerHTML = '<p class="report-detail-meta">No users found.</p>';
+        return;
+    }
+
+    container.innerHTML = users.map(u => {
+        const isBlocked = !!getBlockRecord(u.email, u.id);
+        const statusClass = isBlocked ? 'status-rejected' : 'status-approved';
+        const statusText = isBlocked ? 'BLOCKED' : 'ACTIVE';
+        const reason = isBlocked ? (getBlockRecord(u.email, u.id)?.reason || 'Security') : '';
+        const photo = u.photoUrl ? `<img src="${u.photoUrl}" alt="${u.name || u.email}" class="user-avatar-img">` : `<span class="avatar-fallback">${(u.name || u.email || 'U').charAt(0).toUpperCase()}</span>`;
+        return `
+            <div class="admin-report-card">
+                <div class="admin-report-header">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="user-avatar user-avatar-sm">${photo}</div>
+                        <div>
+                            <h3 class="report-detail-title">${u.name || 'User'}</h3>
+                            <p class="report-detail-meta">${u.email || 'No email'}</p>
+                            <p class="report-detail-meta">${u.phone || ''}</p>
+                        </div>
+                    </div>
+                    <span class="admin-report-status ${statusClass}">${statusText}</span>
+                </div>
+                <p class="report-detail-meta">Role: ${u.role || 'USER'}</p>
+                ${reason ? `<p class="report-detail-meta">Blocked Reason: ${reason}</p>` : ''}
+                <div class="admin-report-actions">
+                    <a class="btn btn-secondary btn-sm" href="user-details.html?id=${u.id}">View Profile</a>
+                    ${isBlocked ? `
+                        <button class="btn btn-success btn-sm" onclick="unblockUser('${u.id}', '${u.email || ''}')">Unblock</button>
+                    ` : `
+                        <button class="btn btn-danger btn-sm" onclick="blockUser('${u.id}', '${u.email || ''}')">Block</button>
+                    `}
+                    <button class="btn btn-danger btn-sm" onclick="deleteUserAccount('${u.id}', '${u.email || ''}')">Delete</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function blockUser(userId, email = '') {
+    const reason = window.prompt('Enter reason for blocking this user:', 'Security reasons');
+    if (reason === null) return;
+    const trimmedReason = (reason || '').trim() || 'Security reasons';
+    if (!userId && !email) return;
+    if (!blockedUsers.find(b => b.id === userId || (email && b.email === email))) {
+        blockedUsers.push({
+            id: userId,
+            email,
+            reason: trimmedReason,
+            blockedAt: new Date().toISOString()
+        });
+        saveBlockedUsers();
+        showToast('User blocked', 'success');
+        renderUsers();
+    }
+}
+
+function unblockUser(userId, email = '') {
+    blockedUsers = blockedUsers.filter(b => b.id !== userId && (!email || b.email !== email));
+    saveBlockedUsers();
+    showToast('User unblocked', 'success');
+    renderUsers();
+}
+
+function deleteUserAccount(userId, email = '') {
+    const confirmDelete = window.confirm('Delete this user? They will be removed from active list and stored in deleted users.');
+    if (!confirmDelete) return;
+
+    // Gather profile
+    const users = getAllUsersForAdmin();
+    const target = users.find(u => u.id === userId || (email && u.email === email));
+    if (!target) return;
+
+    if (!deletedUsers.find(d => d.id === target.id || (target.email && d.email === target.email))) {
+        deletedUsers.push({
+            ...target,
+            deletedAt: new Date().toISOString()
+        });
+        saveDeletedUsers();
+    }
+
+    blockedUsers = blockedUsers.filter(b => b.id !== target.id && (!target.email || b.email !== target.email));
+    saveBlockedUsers();
+
+    // Remove stored profile
+    localStorage.removeItem(`userProfile_${target.id}`);
+    // Remove from demo users list
+    const demoIndex = demoUsers.findIndex(u => u.id === target.id);
+    if (demoIndex > -1) {
+        demoUsers.splice(demoIndex, 1);
+    }
+
+    // Logout if current user
+    if (currentUser && currentUser.id === target.id) {
+        clearCurrentUser();
+        showToast('Your account has been deleted by admin.', 'error');
+    }
+
+    showToast('User deleted (soft)', 'success');
+    renderUsers();
+    renderDeletedUsersList();
+}
+
+function restoreDeletedUser(userId) {
+    const record = deletedUsers.find(u => u.id === userId);
+    if (!record) return;
+    deletedUsers = deletedUsers.filter(u => u.id !== userId);
+    saveDeletedUsers();
+
+    // Re-add to demoUsers list if missing
+    if (!demoUsers.find(u => u.id === record.id)) {
+        demoUsers.push({
+            ...record,
+            role: isAdminEmail(record.email) ? 'ADMIN' : (record.role || 'USER')
+        });
+    }
+
+    showToast('User restored', 'success');
+    renderUsers();
+    renderDeletedUsersList();
+}
+
+function renderDeletedUsersList() {
+    const container = document.getElementById('deletedUsersContainer');
+    if (!container) return;
+    if (deletedUsers.length === 0) {
+        container.innerHTML = '<p class="report-detail-meta">No deleted users.</p>';
+        return;
+    }
+    container.innerHTML = deletedUsers.map(u => `
+        <div class="admin-report-card" style="background-color: var(--color-gray-50);">
+            <div class="admin-report-header">
+                <div>
+                    <h3 class="report-detail-title">${u.name || 'User'}</h3>
+                    <p class="report-detail-meta">${u.email || ''}</p>
+                    <p class="report-detail-meta">Deleted: ${new Date(u.deletedAt).toLocaleString()}</p>
+                </div>
+                <span class="admin-report-status status-rejected">DELETED</span>
+            </div>
+            <div class="admin-report-actions">
+                <button class="btn btn-primary btn-sm" onclick="restoreDeletedUser('${u.id}')">Restore User</button>
+            </div>
+        </div>
+    `).join('');
 }
 
 // ===== Auth Helpers =====

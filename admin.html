@@ -56,6 +56,7 @@
                 <button class="filter-btn" data-filter="APPROVED">Approved</button>
                 <button class="filter-btn" data-filter="REJECTED">Rejected</button>
                 <button id="refreshBtn" class="btn btn-secondary btn-sm">Refresh</button>
+                <a href="users.html" class="btn btn-secondary btn-sm" title="Manage Users">👤 Users</a>
             </div>
 
             <!-- Reports List -->
@@ -82,6 +83,14 @@
                 </div>
                 <div id="noDeletedReports" class="no-reports hidden">
                     <p>No deleted reports</p>
+                </div>
+            </div>
+
+            <!-- User Management -->
+            <div class="reports-container" style="margin-top: 2rem;">
+                <h2 class="page-title" style="font-size: 1.5rem;">Users</h2>
+                <div id="adminUsersContainer">
+                    <!-- Users will be listed here -->
                 </div>
             </div>
         </div>
@@ -127,6 +136,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="firebase-init.js"></script>
+    <script src="reports-db.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

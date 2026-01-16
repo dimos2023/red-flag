@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Details - Red Flag</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <span class="logo-icon">🚩</span>
+                    <span class="logo-text">User Details</span>
+                </a>
+                <div class="header-actions">
+                    <span class="admin-badge">Admin</span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm">Back to Admin</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="admin-page">
+        <div class="container">
+            <div class="report-header" style="align-items:center;">
+                <div>
+                    <h1 class="page-title">User Profile</h1>
+                    <p class="page-description">Full details of the selected account.</p>
+                </div>
+                <span id="userStatus" class="admin-report-status status-approved">ACTIVE</span>
+            </div>
+
+            <div class="report-card">
+                <div class="report-card-header">
+                    <h2 class="report-card-title">Profile Info</h2>
+                    <p class="report-card-description">Contact and personal information.</p>
+                </div>
+                <div class="profile-summary">
+                    <div class="user-avatar user-avatar-lg" id="userAvatar">
+                        <span class="avatar-fallback">U</span>
+                    </div>
+                    <div>
+                        <h3 id="userName" class="report-detail-title">User</h3>
+                        <p id="userEmail" class="report-detail-meta">-</p>
+                        <p id="userPhone" class="report-detail-meta">-</p>
+                    </div>
+                </div>
+                <div class="report-form" style="gap: var(--spacing-lg);">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Address</label>
+                            <p id="userAddress" class="report-detail-value">-</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Education</label>
+                            <p id="userEducation" class="report-detail-value">-</p>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Birth Date</label>
+                            <p id="userBirthDate" class="report-detail-value">-</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Gender</label>
+                            <p id="userGender" class="report-detail-value">-</p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Work Email</label>
+                        <p id="userWorkEmail" class="report-detail-value">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="report-card">
+                <div class="report-card-header">
+                    <h2 class="report-card-title">Admin Controls</h2>
+                    <p class="report-card-description">Block or unblock this account.</p>
+                </div>
+                <div class="admin-report-actions">
+                    <button id="blockUserBtn" class="btn btn-danger btn-sm">Block User</button>
+                    <button id="unblockUserBtn" class="btn btn-success btn-sm">Unblock User</button>
+                </div>
+                <p class="report-detail-meta" id="blockReasonText"></p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-copyright">
+                Ac <span id="currentYear"></span> Red Flag. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="firebase-init.js"></script>
+    <script src="reports-db.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

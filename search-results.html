@@ -17,7 +17,7 @@
                 </a>
                 <nav class="nav">
                     <a href="search.html" class="nav-link">Search</a>
-                    <a href="report.html" class="nav-link">Report Scam</a>
+                    <a href="report.html" class="nav-link">Report Suspected</a>
                     <a href="login.html" class="nav-link">Login</a>
                 </nav>
             </div>
@@ -51,14 +51,14 @@
                                 <span>🚨</span>
                             </div>
                             <h1 class="flag-title">RED FLAG</h1>
-                            <p class="flag-subtitle">Scam Reports Found</p>
+                            <p class="flag-subtitle">Suspected Report Found</p>
                             
                             <div class="flag-warning">
                                 <span class="warning-icon">⚠️</span>
                                 <div>
                                     <p class="warning-title">Warning: Do NOT deal with this person or entity</p>
                                     <p class="warning-text">
-                                        <span id="reportCount">0</span> scam report(s) found in our database. 
+                                        <span id="reportCount">0</span> Suspected report(s) found in our database. 
                                         Based on user reports, this person or entity has been involved in 
                                         fraudulent activities.
                                     </p>
@@ -78,14 +78,14 @@
                                 <span>✅</span>
                             </div>
                             <h1 class="flag-title">GREEN FLAG</h1>
-                            <p class="flag-subtitle">No Scam Reports Found</p>
+                            <p class="flag-subtitle">No Suspected Reports Found</p>
                             
                             <div class="flag-success">
                                 <span class="success-icon">✅</span>
                                 <div>
                                     <p class="success-title">No negative data found in our database</p>
                                     <p class="success-text">
-                                        We couldn't find any approved scam reports for this 
+                                        We couldn't find any approved Suspected reports for this 
                                         <span id="flagTypeLabel">phone number</span>. However, this does NOT 
                                         guarantee complete trustworthiness.
                                     </p>
@@ -106,7 +106,7 @@
 
                     <!-- Detailed Reports -->
                     <div id="reportsList" class="reports-list hidden">
-                        <h2 class="reports-list-title">Reported Scam Details</h2>
+                        <h2 class="reports-list-title">Reported Suspected Details</h2>
                         <div id="reportsContainer"></div>
                     </div>
 
@@ -140,6 +140,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="firebase-init.js"></script>
+    <script src="reports-db.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
